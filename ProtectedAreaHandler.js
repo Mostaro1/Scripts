@@ -5,16 +5,65 @@ export class ProtectedAreas {
     if (!world.getDynamicProperty("protectedAreas")) {
       world.setDynamicProperty("protectedAreas", JSON.stringify([]));
     }
+    if (!world.getDynamicProperty("protectedAreasAdmins")) {
+      world.setDynamicProperty("protectedAreasAdmins", JSON.stringify([]));
+    }
   }
+
+  //GET
 
   getProtectedAreas() {
     return JSON.parse(world.getDynamicProperty("protectedAreas"));
   }
 
-  getArea({ name }) {
+  getArea({ id }) {
     const protectedAreas = this.getProtectedAreas();
 
-    return protectedAreas.find((area) => area.id == name);
+    return protectedAreas.find((area) => area.id == id);
+  }
+
+  getAreaWhitelist({ id }) {
+    const protectedAreas = this.getProtectedAreas();
+
+    const area = protectedAreas.find((area) => area.id == id);
+
+    if (area) {
+      return area.whitelist;
+    }
+  }
+
+  getAdmins() {
+    return JSON.parse(world.getDynamicProperty("protectedAreasAdmins"));
+  }
+
+  //SET
+
+  areaWhitelistAdd({ id, player }) {
+    const whitelist = this.getAreaWhitelist({ id });
+
+    if (whitelist) {
+      const isDuplicated = whitelist.some((name) => name == player);
+
+      if (!isDuplicated) {
+        whitelist.push(player);
+
+        this.updateAreaWhitelist({ id, data: whitelist });
+
+        console.warn(`§d${player}§f added to ${id} whitelist!`);
+      }
+    }
+  }
+
+  addAdmin({ player }) {
+    const admins = this.getAdmins();
+
+    const isInAdminList = admins.some((admin) => admin == player);
+
+    if (!isInAdminList) {
+      admins.push(player);
+
+      this.updateAdmins({ data: admins });
+    }
   }
 
   setArea({ name, from, to }) {
@@ -32,6 +81,7 @@ export class ProtectedAreas {
     if (from instanceof Vector && to instanceof Vector) {
       const area = {
         id: name,
+        whitelist: [],
         from: {
           x: from.x,
           y: from.y,
@@ -54,11 +104,33 @@ export class ProtectedAreas {
     }
   }
 
+  //UPDATE
+
   update({ data }) {
     const stringify = JSON.stringify(data);
 
     world.setDynamicProperty("protectedAreas", stringify);
   }
+
+  updateAdmins({ data }) {
+    const stringify = JSON.stringify(data);
+
+    world.setDynamicProperty("protectedAreasAdmins", stringify);
+  }
+
+  updateAreaWhitelist({ id, data }) {
+    const protectedAreas = this.getProtectedAreas();
+
+    const area = protectedAreas.find((area) => area.id == id);
+
+    if (area) {
+      area.whitelist = data;
+
+      this.update({ data: protectedAreas });
+    }
+  }
+
+  //DELETE
 
   deleteArea({ id }) {
     const protectedAreas = this.getProtectedAreas();
@@ -81,7 +153,62 @@ export class ProtectedAreas {
 
     this.update({ data: protectedAreas });
   }
+
+  clearAreaWhitelist({ id }) {
+    const whitelist = this.getAreaWhitelist({ id });
+
+    if (whitelist) {
+      whitelist.splice(0);
+
+      this.updateAreaWhitelist({ id, data: whitelist });
+    }
+  }
+
+  removeAdmin({ player }) {
+    const admins = this.getAdmins();
+
+    const isInAdminList = admins.some((admin) => admin == player);
+
+    if (isInAdminList) {
+      const index = admins.findIndex((admin) => admin == player);
+
+      if (index > -1) {
+        admins.splice(index, 1);
+
+        this.updateAdmins({ data: admins });
+      }
+    }
+  }
+
+  removeAllAdmins() {
+    const admins = this.getAdmins();
+
+    admins.splice(0);
+
+    this.updateAdmins({ data: admins });
+  }
+
+  areaWhitelistRemove({ id, player }) {
+    const whitelist = this.getAreaWhitelist({ id });
+
+    if (whitelist) {
+      const isInWhitelist = whitelist.some((name) => name == player);
+
+      if (isInWhitelist) {
+        const index = whitelist.findIndex((name) => name == player);
+
+        if (index > -1) {
+          whitelist.splice(index, 1);
+
+          this.updateAreaWhitelist({ id, data: whitelist });
+
+          console.warn(`§d${player}§f removed from ${id} whitelist!`);
+        }
+      }
+    }
+  }
 }
+
 const protectedAreas = new ProtectedAreas();
 
 world.beforeEvents.playerBreakBlock.subscribe((data) => {
@@ -147,17 +274,41 @@ system.runInterval(() => {
     }
 
     if (block && block.isValid()) {
+      const isAdmin = protectedAreas
+        .getAdmins()
+        .some((admin) => admin == player.name);
+
       const isInside = protectedAreas.getProtectedAreas().some((area) =>
         BlockVolumeUtils.isInside(
           {
-            from: protectedAreas.getArea({ name: area.id }).from,
-            to: protectedAreas.getArea({ name: area.id }).to,
+            from: protectedAreas.getArea({ id: area.id }).from,
+            to: protectedAreas.getArea({ id: area.id }).to,
           },
           block.location
         )
       );
 
-      player.setDynamicProperty("vb", isInside);
+      const area = protectedAreas.getProtectedAreas().find((area) =>
+        BlockVolumeUtils.isInside(
+          {
+            from: protectedAreas.getArea({ id: area.id }).from,
+            to: protectedAreas.getArea({ id: area.id }).to,
+          },
+          block.location
+        )
+      );
+
+      if (area) {
+        if (isAdmin) {
+          player.setDynamicProperty("vb", false);
+        } else if (area.whitelist.includes(player.name)) {
+          player.setDynamicProperty("vb", false);
+        } else {
+          player.setDynamicProperty("vb", isInside);
+        }
+      } else {
+        player.setDynamicProperty("vb", isInside);
+      }
     }
   }
 });
