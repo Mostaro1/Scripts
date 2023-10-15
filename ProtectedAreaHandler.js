@@ -108,8 +108,6 @@ export class ProtectedAreas {
           ) == 2
       );
 
-      console.warn(hasIntersection);
-
       if (!hasIntersection) {
         protectedAreas.push(newArea);
 
