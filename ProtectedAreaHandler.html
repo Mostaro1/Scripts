@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>ProtectedAreas Class Documentation</title>
+    <style>
+        body {
+            font-size: 18px;
+        }
+        h2 {
+            font-size: 24px;
+        }
+        h3 {
+            font-size: 20px;
+        }
+        h4 {
+            font-size: 18px;
+        }
+        h5 {
+            font-size: 16px;
+        }
+        pre code {
+            font-size: 16px;
+        }
+    </style>
+</head>
+<body>
+    <h1>ProtectedAreas Class Documentation</h1>
+    <p>This documentation provides an overview of the ProtectedAreas class and its methods in JavaScript.</p>
+
+    <h2>Class: ProtectedAreas</h2>
+    <p>The ProtectedAreas class is designed to manage protected areas and administrators for a world. It provides methods to create, modify, and delete protected areas, as well as manage whitelist and administrators.</p>
+
+    <h3>Constructor</h3>
+    <pre><code>
+    constructor()
+    </code></pre>
+    <p>Initializes the ProtectedAreas class. If dynamic properties 'protectedAreas' and 'protectedAreasAdmins' do not exist in the world, they are initialized as empty arrays.</p>
+
+    <h3>Methods</h3>
+
+    <h4>GET Methods</h4>
+
+    <p>These methods allow you to retrieve information from the protected areas.</p>
+
+    <h5>getProtectedAreas</h5>
+    <pre><code>
+    getProtectedAreas(): Array&lt;Object&gt;
+    </code></pre>
+    <p>Returns an array of protected areas as objects.</p>
+
+    <h5>getArea</h5>
+    <pre><code>
+    getArea({ id: string }): Object | undefined
+    </code></pre>
+    <p>Returns a specific protected area by its unique ID. The 'id' parameter should be a string. Returns an object or undefined if not found.</p>
+
+    <h5>getAreaWhitelist</h5>
+    <pre><code>
+    getAreaWhitelist({ id: string }): Array&lt;string&gt; | undefined
+    </code></pre>
+    <p>Returns the whitelist of players for a specific protected area. The 'id' parameter should be a string. Returns an array of strings or undefined if the area is not found.</p>
+
+    <h5>getAdmins</h5>
+    <pre><code>
+    getAdmins(): Array&lt;string&gt;
+    </code></pre>
+    <p>Returns an array of administrators for the protected areas.
+
+    <h4>SET Methods</h4>
+
+    <p>These methods allow you to add and set information for the protected areas.</p>
+
+    <h5>areaWhitelistAdd</h5>
+    <pre><code>
+    areaWhitelistAdd({ id: string, player: string }): void
+    </code></pre>
+    <p>Adds a player to the whitelist of a specific protected area. The 'id' and 'player' parameters should be strings.</p>
+
+    <h5>addAdmin</h5>
+    <pre><code>
+    addAdmin({ player: string }): void
+    </code></pre>
+    <p>Adds a player to the list of administrators for the protected areas. The 'player' parameter should be a string.</p>
+
+    <h5>setArea</h5>
+    <pre><code>
+    setArea({ name: string, from: Vector, to: Vector }): void
+    </code></pre>
+    <p>Creates a new protected area with a unique name and specified boundaries. The 'name' parameter should be a string, and the 'from' and 'to' parameters should be Vector objects.</p>
+
+    <h4>UPDATE Methods</h4>
+
+    <p>These methods allow you to update information for the protected areas and administrators.</p>
+
+    <h5>update</h5>
+    <pre><code>
+    update({ data: any }): void
+    </code></pre>
+    <p>Updates the protected areas data with the provided data. The 'data' parameter can be of any type.</p>
+
+    <h5>updateAdmins</h5>
+    <pre><code>
+    updateAdmins({ data: any }): void
+    </code></pre>
+    <p>Updates the administrators data with the provided data. The 'data' parameter can be of any type.</p>
+
+    <h5>updateAreaWhitelist</h5>
+    <pre><code>
+    updateAreaWhitelist({ id: string, data: any }): void
+    </code></pre>
+    <p>Updates the whitelist data for a specific protected area with the provided data. The 'id' parameter should be a string, and the 'data' parameter can be of any type.</p>
+
+    <h4>DELETE Methods</h4>
+
+    <p>These methods allow you to delete protected areas, administrators, and whitelist entries.</p>
+
+    <h5>deleteArea</h5>
+    <pre><code>
+    deleteArea({ id: string }): void
+    </code></pre>
+    <p>Deletes a specific protected area by its unique ID. The 'id' parameter should be a string.</p>
+
+    <h5>deleteAllAreas</h5>
+    <pre><code>
+    deleteAllAreas(): void
+    </code></pre>
+    <p>Deletes all protected areas.</p>
+
+    <h5>clearAreaWhitelist</h5>
+    <pre><code>
+    clearAreaWhitelist({ id: string }): void
+    </code></pre>
+    <p>Clears the whitelist for a specific protected area. The 'id' parameter should be a string.</p>
+
+    <h5>removeAdmin</h5>
+    <pre><code>
+    removeAdmin({ player: string }): void
+    </code></pre>
+    <p>Removes a player from the list of administrators. The 'player' parameter should be a string.</p>
+
+    <h5>removeAllAdmins</h5>
+    <pre><code>
+    removeAllAdmins(): void
+    </code></pre>
+    <p>Clears the list of administrators.</p>
+
+    <h5>areaWhitelistRemove</h5>
+    <pre><code>
+    areaWhitelistRemove({ id: string, player: string }): void
+    </code></pre>
+    <p>Removes a player from the whitelist of a specific protected area. The 'id' and 'player' parameters should be strings.</p>
+
+    <p>This documentation outlines the functionality provided by the ProtectedAreas class for managing protected areas and administrators in a world.</p>
+
+</body>
+</html>
