@@ -366,3 +366,19 @@ world.beforeEvents.playerBreakBlock.subscribe(data => {
 
     handlePlayerInteractWithBlocks({ player, block, data });
 });
+
+world.beforeEvents.explosion.subscribe(data => {
+    const areas = protectedAreas.getProtectedAreas();
+
+    const impactedBlocks = data.getImpactedBlocks();
+
+    const blockIsInsideArea = areas.some(area => {
+        return impactedBlocks.some(block =>
+            AreaUtils.isInside(block.location, new Area(area))
+        );
+    });
+
+    data.cancel = blockIsInsideArea;
+
+    
+});
