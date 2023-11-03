@@ -22,7 +22,7 @@ export class ProtectedAreas {
     getArea({ id }) {
         const protectedAreas = this.getProtectedAreas();
 
-        return protectedAreas.find(area => area.id == id);
+        return new Area(protectedAreas.find(area => area.id == id));
     }
 
     getAreaWhitelist({ id }) {
@@ -255,6 +255,189 @@ class Area {
         this.bottom = Math.min(AreaBox.from.y, AreaBox.to.y);
         this.top = Math.max(AreaBox.from.y, AreaBox.to.y);
     }
+
+    async calculateSideArea(from, to) {
+        const locations = [];
+
+        for (let x = from.x; x <= to.x; x++) {
+            for (let y = from.y; y <= to.y; y++) {
+                for (let z = from.z; z <= to.z; z++) {
+                    locations.push({
+                        x,
+                        y,
+                        z
+                    });
+                }
+            }
+        }
+
+        return locations;
+    }
+
+    async frontSideArea() {
+        this.sideArea = {
+            from: {
+                x: this.left,
+                y: this.bottom,
+                z: this.front
+            },
+            to: {
+                x: this.right,
+                y: this.top,
+                z: this.front
+            }
+        };
+
+        const locations = await this.calculateSideArea(
+            this.sideArea.from,
+            this.sideArea.to
+        );
+
+        return locations;
+    }
+
+    async backSideArea() {
+        this.sideArea = {
+            from: {
+                x: this.left,
+                y: this.bottom,
+                z: this.back
+            },
+            to: {
+                x: this.right,
+                y: this.top,
+                z: this.back
+            }
+        };
+
+        const locations = await this.calculateSideArea(
+            this.sideArea.from,
+            this.sideArea.to
+        );
+
+        return locations;
+    }
+
+    async rightSideArea() {
+        this.sideArea = {
+            from: {
+                x: this.right,
+                y: this.bottom,
+                z: this.back
+            },
+            to: {
+                x: this.right,
+                y: this.top,
+                z: this.front
+            }
+        };
+
+        const locations = await this.calculateSideArea(
+            this.sideArea.from,
+            this.sideArea.to
+        );
+
+        return locations;
+    }
+
+    async leftSideArea() {
+        this.sideArea = {
+            from: {
+                x: this.left,
+                y: this.bottom,
+                z: this.back
+            },
+            to: {
+                x: this.left,
+                y: this.top,
+                z: this.front
+            }
+        };
+
+        const locations = await this.calculateSideArea(
+            this.sideArea.from,
+            this.sideArea.to
+        );
+
+        return locations;
+    }
+
+    async topSideArea() {
+        this.sideArea = {
+            from: {
+                x: this.left,
+                y: this.top,
+                z: this.back
+            },
+            to: {
+                x: this.right,
+                y: this.top,
+                z: this.front
+            }
+        };
+
+        const locations = await this.calculateSideArea(
+            this.sideArea.from,
+            this.sideArea.to
+        );
+
+        return locations;
+    }
+
+    async bottomSideArea() {
+        this.sideArea = {
+            from: {
+                x: this.left,
+                y: this.bottom,
+                z: this.back
+            },
+            to: {
+                x: this.right,
+                y: this.bottom,
+                z: this.front
+            }
+        };
+
+        const locations = await this.calculateSideArea(
+            this.sideArea.from,
+            this.sideArea.to
+        );
+
+        return locations;
+    }
+
+    async showBorder(dimension, particle) {
+        const sideLocations = [
+            this.frontSideArea(),
+            this.backSideArea(),
+            this.leftSideArea(),
+            this.rightSideArea(),
+            this.bottomSideArea(),
+            this.topSideArea()
+        ];
+
+        const locations = [];
+        for (let sideLocation of await Promise.all(sideLocations)) {
+            locations.push(...sideLocation);
+        }
+
+        const uniqueLocations = new Set();
+
+        const filteredLocations = locations.filter(loc => {
+            const { x, y, z } = loc;
+
+            const key = `${x}_${y}_${z}`;
+
+            if (!uniqueLocations.has(key)) {
+                uniqueLocations.add(key);
+                return true;
+            } else return false;
+        });
+        
+        for(let loc of filteredLocations) {
+          dimension.spawnParticle(particle, loc)
+        }
+    }
 }
 
 class AreaUtils {
@@ -326,7 +509,7 @@ function getBlockFromFace(block, face) {
     }
 }
 
-function handlePlayerInteractWithBlocks({ player, block, data }) {
+function handlePlayerInteractWithBlock({ player, block, data }) {
     const areas = protectedAreas.getProtectedAreas();
 
     const blockInsideProtectedArea = areas.some(area =>
@@ -347,24 +530,47 @@ function handlePlayerInteractWithBlocks({ player, block, data }) {
     } else return;
 }
 
+function handlePlayerInteractWithBlocks({ player, blocks, data }) {
+    const areas = protectedAreas.getProtectedAreas();
+
+    const blockInsideProtectedArea = blocks.some(block => {
+        return areas.some(area =>
+            AreaUtils.isInside(block.location, new Area(area))
+        );
+    });
+
+    const playerIsAdmin = protectedAreas.getAdmins().includes(player.name);
+
+    const playerIsWhitelisted = AreaUtils.getAreaFromBlockLocation(
+        block.location,
+        areas
+    )?.whitelist.includes(player.name);
+
+    if (playerIsAdmin) {
+        return;
+    } else if (blockInsideProtectedArea) {
+        data.cancel = !playerIsWhitelisted;
+    } else return;
+}
+
 world.beforeEvents.playerPlaceBlock.subscribe(data => {
     const { block, player, face } = data;
 
     const interactedBlock = getBlockFromFace(block, face);
 
-    handlePlayerInteractWithBlocks({ player, block: interactedBlock, data });
+    handlePlayerInteractWithBlock({ player, block: interactedBlock, data });
 });
 
 world.beforeEvents.playerInteractWithBlock.subscribe(data => {
     const { block, player } = data;
 
-    handlePlayerInteractWithBlocks({ player, block, data });
+    handlePlayerInteractWithBlock({ player, block, data });
 });
 
 world.beforeEvents.playerBreakBlock.subscribe(data => {
     const { block, player } = data;
 
-    handlePlayerInteractWithBlocks({ player, block, data });
+    handlePlayerInteractWithBlock({ player, block, data });
 });
 
 world.beforeEvents.explosion.subscribe(data => {
@@ -379,6 +585,6 @@ world.beforeEvents.explosion.subscribe(data => {
     });
 
     data.cancel = blockIsInsideArea;
-
-    
 });
+
+
