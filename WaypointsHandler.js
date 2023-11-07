@@ -15,14 +15,29 @@ class Waypoints {
         );
     }
 
-    getPlayerWaypoints({ player }) {
+    getPlayerWaypoints({ player, type }) {
         const waypoints = this.getAllWaypoints();
 
-        return waypoints.filter(
-            waypoint =>
-                waypoint.owner == player.name ||
-                waypoint.whitelist.includes(player.name)
-        );
+        if (!type) {
+            return waypoints.filter(
+                waypoint =>
+                    waypoint.owner == player.name ||
+                    waypoint.whitelist.includes(player.name)
+            );
+        } else {
+            if (type != "private" && type != "public") {
+                console.warn(
+                    "§etype only accepts§f §b'private'§f or §b'public'§f"
+                );
+                return
+            }
+            return waypoints.filter(
+                waypoint =>
+                    (waypoint.owner == player.name && waypoint.type == type) ||
+                    (waypoint.whitelist.includes(player.name) &&
+                        waypoint.type == type)
+            );
+        }
     }
 
     teleportPlayerTo({ name, player }) {
