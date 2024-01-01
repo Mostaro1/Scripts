@@ -3,7 +3,7 @@ import { world, system, Vector, BlockVolumeUtils } from "@minecraft/server";
 export class ProtectedAreas {
   constructor() {
     if (!world.getDynamicProperty("protectedAreas")) {
-      world.setDynamicProperty("protectedAreas", JSON.stringify([]));
+      world.setDynamicProperty("protectedAreas", JSON.stringify([])); 
     }
     if (!world.getDynamicProperty("protectedAreasAdmins")) {
       world.setDynamicProperty("protectedAreasAdmins", JSON.stringify([]));
